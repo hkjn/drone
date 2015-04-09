@@ -127,6 +127,32 @@ func TestPrivateRegistryAuth(t *testing.T) {
 	}
 }
 
+// Private Registry Test (with auth but no email)
+var privateRegistryAuthNoEmailYaml = `
+publish:
+  docker:
+    dockerfile: file_path
+    docker_host: tcp://server:1000
+    docker_version: 1.0
+    registry_login_url: https://registry:8000/v1/
+    registry_login: true
+    username: username
+    password: password
+    image_name: registry/image
+`
+
+func TestPrivateRegistryAuthNoEmail(t *testing.T) {
+	response, err := setUpWithDrone(privateRegistryAuthNoEmailYaml)
+	t.Log(privateRegistryAuthNoEmailYaml)
+	if err != nil {
+		t.Fatalf("Can't unmarshal script: %s\n\n", err.Error())
+	}
+	if !strings.Contains(response, "docker login -u username -p password -e ' ' https://registry:8000/v1/") {
+		t.Log("\n\n\n\ndocker login -u username -p xxxxxxxx -e ' ' https://registry:8000/v1/\n\n\n\n")
+		t.Fatalf("Response: " + response + " doesn't contain private registry login\n\n")
+	}
+}
+
 // Keep builds Test
 var keepBuildsYaml = `
 publish:
