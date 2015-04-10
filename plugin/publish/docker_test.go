@@ -147,8 +147,8 @@ func TestPrivateRegistryAuthNoEmail(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Can't unmarshal script: %s\n\n", err.Error())
 	}
-	if !strings.Contains(response, "docker login -u username -p password -e ' ' https://registry:8000/v1/") {
-		t.Log("\n\n\n\ndocker login -u username -p xxxxxxxx -e ' ' https://registry:8000/v1/\n\n\n\n")
+	if !strings.Contains(response, `docker login -u username -p password -e " " https://registry:8000/v1/`) {
+		t.Log("\n\n\n\ndocker login -u username -p xxxxxxxx -e \" \" https://registry:8000/v1/\n\n\n\n")
 		t.Fatalf("Response: " + response + " doesn't contain private registry login\n\n")
 	}
 }

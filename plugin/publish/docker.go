@@ -94,9 +94,9 @@ func (d *Docker) Write(f *buildfile.Buildfile) {
 
 	// Login?
 	if d.RegistryLogin == true {
-		// If email is unspecified, pass in -e ' ' to avoid having
+		// If email is unspecified, pass in -e " " to avoid having
 		// registry URL interpreted as email, which will fail cryptically.
-		emailOpt := "' '"
+		emailOpt := `" "`
 		if d.Email != "" {
 			emailOpt = d.Email
 		}
