@@ -41,8 +41,8 @@ type Docker struct {
 // Write adds commands to the buildfile to do the following:
 // 1. Install the docker client in the Drone container if required.
 // 2. Build a docker image based on the dockerfile defined in the config.
-// 3. Push that docker image to index.docker.io.
-// 4. Delete the docker image on the server it was build on so we conserve disk space.
+// 3. Push that docker image to index.docker.io, or user-specified registry.
+// 4. Delete the docker image on the server it was built, unless otherwise specified.
 func (d *Docker) Write(f *buildfile.Buildfile) {
 	if len(d.DockerHost) == 0 || len(d.ImageName) == 0 {
 		f.WriteCmdSilent(`echo -e "Docker Plugin: Missing argument(s)\n\n"`)
@@ -86,7 +86,7 @@ func (d *Docker) Write(f *buildfile.Buildfile) {
 		dockerPath = fmt.Sprintf("- < %s", d.Dockerfile)
 	}
 
-	// Run the command commands to build and deploy the image.
+	// Run the commands to build and deploy the image.
 
 	// Add the single tag if one exists
 	if len(d.Tag) > 0 {
