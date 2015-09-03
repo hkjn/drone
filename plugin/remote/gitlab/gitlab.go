@@ -56,7 +56,13 @@ func (r *Gitlab) Authorize(res http.ResponseWriter, req *http.Request) (*model.L
 		return nil, fmt.Errorf("Error matching state in OAuth2 redirect")
 	}
 
-	var trans = &oauth.Transport{Config: config}
+	var trans = &oauth.Transport{
+		Config: config,
+		Transport: &http.Transport{
+			Proxy:           http.ProxyFromEnvironment,
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: r.SkipVerify},
+		},
+	}
 	var token, err = trans.Exchange(code)
 	if err != nil {
 		return nil, fmt.Errorf("Error exchanging token. %s", err)
@@ -178,7 +184,7 @@ func (r *Gitlab) Activate(user *model.User, repo *model.Repo, link string) error
 	link += "?owner=" + repo.Owner + "&name=" + repo.Name
 
 	// add the hook
-	return client.AddProjectHook(path, link, true, false, true)
+	return client.AddProjectHook(path, link, true, false, true, false)
 }
 
 // Deactivate removes a repository by removing all the post-commit hooks
@@ -268,7 +274,8 @@ func (r *Gitlab) OpenRegistration() bool {
 
 func (r *Gitlab) GetToken(user *model.User) (*model.Token, error) {
 	expiry := time.Unix(user.TokenExpiry, 0)
-	if expiry.Sub(time.Now()) > (60 * time.Second) {
+	if user.TokenExpiry == 0 && len(user.Access) != 0 ||
+		expiry.Sub(time.Now()) > (60*time.Second) {
 		return nil, nil
 	}
 

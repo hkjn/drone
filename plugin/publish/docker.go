@@ -62,8 +62,23 @@ func (d *Docker) Write(f *buildfile.Buildfile) {
 
 	if len(d.DockerVersion) > 0 {
 		// Download docker binary and install it as /usr/local/bin/docker if it does not exist
-		f.WriteCmd("type -p docker || wget -qO- https://get.docker.io/builds/Linux/x86_64/docker-" +
+		f.WriteCmd("type -p docker || curl -sSL https://get.docker.io/builds/Linux/x86_64/docker-" +
 			d.DockerVersion + ".tgz |sudo tar zxf - -C /")
+	}
+
+	// Export docker host once
+	f.WriteCmd("export DOCKER_HOST=" + d.DockerHost)
+
+	// Login?
+	if d.RegistryLogin == true {
+		// If email is unspecified, pass in -e ' ' to avoid having
+		// registry URL interpreted as email, which will fail cryptically.
+		emailOpt := "' '"
+		if d.Email != "" {
+			emailOpt = d.Email
+		}
+		f.WriteCmdSilent(fmt.Sprintf("docker login -u %s -p %s -e %s %s",
+			d.Username, d.Password, emailOpt, d.RegistryLoginUrl))
 	}
 
 	dockerPath := "."
@@ -85,9 +100,6 @@ func (d *Docker) Write(f *buildfile.Buildfile) {
 
 	// There is always at least 1 tag
 	buildImageTag := d.Tags[0]
-
-	// Export docker host once
-	f.WriteCmd("export DOCKER_HOST=" + d.DockerHost)
 
 	// Build the image
 	f.WriteCmd(fmt.Sprintf("docker build --pull -t %s:%s %s", d.ImageName, buildImageTag, dockerPath))
